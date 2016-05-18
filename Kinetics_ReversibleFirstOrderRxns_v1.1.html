@@ -1,0 +1,117 @@
+<!-- Created by Alicia Fitch, at Miami University -->
+<!-- fitchae@miamioh.edu -->
+<!-- Do not make changes without permission -->
+<head>
+    <title>Kinetics: Reversible First Order</title>
+    <meta charset="UTF-8">
+    <!-- Source the latest plotly.js source code and dependencies -->
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style type="text/css">
+        h1{font-family:Arial,Helvetica,sans-serif;font-size:16pt;font-weight:bold;}
+        h2{font-family:Arial,Helvetica,sans-serif;font-size:15pt;margin:0.5em;margin-left:2em;font-weight:bold;}
+        BODY{font-family:Arial,Helvetica,sans-serif;font-size:12pt;margin:5px;}
+        TD{font-family:Arial,Helvetica,sans-serif;font-size:12pt;}
+        .ex1{border-spacing:20px 2px;font-family:Arial,Helvetica,sans-serif;font-size:12pt;}
+        .ColPad {padding-left:20px;}
+        f1{font-family:Arial,Helvetica,sans-serif;font-size:10pt;}
+        .arrow{position:relative;text-align:center;}
+        .onarrow{position:absolute;top:-0.65em;left:0px;width:100%;font-size:70%;text-align:center;}
+    </style>
+</head>
+<!-- Title -->
+<h1>Species Concentrations as a Function of Time: Reversible First Order Reactions</h1>
+<!-- Chemical equation -->
+<h2>A<span class="arrow"><i>&#8592;</i><span class="onarrow">k<sub>-1</sub></span></span>B<br><br>A<span class="arrow"><i>&#8594;</i><span class="onarrow">k<sub>1</sub></span></span>B</h2>
+<f1>The above reactions are a set of irreversible, parallel first order reactions.</f1><br>
+<body>
+<!-- Display suggested parameters -->
+Suggested starting values for the parameters below:<br>
+<table class="ex1" border="0">
+    <tr><td>[A]<sub>0</sub> = 1.0 &mu;M</td><td>[B]<sub>0</sub> = 0.0 &mu;M</td></tr>
+    <tr><td>k<sub>1</sub> = 3.0  s<sup>-1</sup></td><td>k<sub>-1</sub> = 1.0  s<sup>-1</sup></td></tr>
+</table>
+<!-- Form for user input of values -->
+<f1>Modify the values in the form fields below and the plot will automatically recalculate.<br>
+    Press "Reset Form & Plot" to return to the initial parameters.<br>
+    Hover over graph to view values.</f1>
+<form id="StartValues_frm" onreset="RePlot()">
+    <table>
+        <tr><td>[A]<sub>0</sub>:</td>
+            <td><input type="text" value="1.0" size=8 maxlength=6 style="width:45px;" onchange="RePlot()"> &mu;M</td>
+            <td class="ColPad">k<sub>1</sub>:</td>
+            <td><input type="text" value="6.0" size=8 maxlength=6 style="width:45px;" onchange="RePlot()"> s<sup>-1</sup></td></tr>
+        <tr><td>[B]<sub>0</sub>:</td>
+            <td><input type="text" value="0.0" size=8 maxlength=6 style="width:45px;" onchange="RePlot()" readonly> &mu;M </td>
+            <td class="ColPad">k<sub>2</sub>:</td>
+            <td><input type="text" value="3.0" size=8 maxlength=6 style="width:45px;" onchange="RePlot()"> s<sup>-1</sup></td></tr>
+        <tr><td colspan=2><input type="button" value="Reset Form & Plot" onClick="SetFormValues()"></td></tr>
+    </table>
+</form>
+<!-- Plotly chart will be drawn inside this DIV -->
+<div id="PlotDiv" style="width: 640px; height: 400px;"></div>
+<script>
+    // Set up capability for an array of linearly spaced points
+    function linspace(from, to, len){
+        var arr = Array(len)
+                , step = ( to - from ) / ( len - 1 )
+                , i = 0
+        for ( ; i < len; ++i )
+            arr[i] = from + ( i * step )
+        return arr}
+    // Set up capability to add one array to another
+    Array.prototype.SumArray = function (arr){
+        var sum = [];
+        if (arr != null && this.length == arr.length) {
+            for (var i = 0; i < arr.length; i++) {
+                sum.push(this[i] + arr[i]);}}
+        return sum;}
+    // This function sets the form values
+    function SetFormValues(){
+        document.getElementById("StartValues_frm").elements.item(0).value = '1.0';
+        document.getElementById("StartValues_frm").elements.item(2).value = '0.0';
+        document.getElementById("StartValues_frm").elements.item(1).value = '3.0';
+        document.getElementById("StartValues_frm").elements.item(3).value = '1.0';
+        RePlot();
+    }
+    // Load variables from form, set time variable
+    function LoadCalcSet(){
+        AzeroForm = document.getElementById("StartValues_frm").elements.item(0).value * 1;
+        BzeroForm = document.getElementById("StartValues_frm").elements.item(2).value * 1;
+        koneForm = document.getElementById("StartValues_frm").elements.item(1).value * 1;
+        knoneForm = document.getElementById("StartValues_frm").elements.item(3).value * 1;
+        time = linspace(0, 1, 1000);
+        // Equations for two parallel first order reactions A -> B with rate k1 and A -> C with rate k2
+        A_Conc = time.map(function(x) { return ((AzeroForm * knoneForm)/(koneForm + knoneForm)) * (1 + ((koneForm/knoneForm) * Math.pow(Math.E,-(koneForm+knoneForm) * x))); });
+        B_Conc = time.map(function(x) { return ((AzeroForm * koneForm)/(koneForm + knoneForm)) * (1 - ( Math.pow(Math.E,-(koneForm+knoneForm) * x))); });
+        // Return sums and traces
+        ABsum = A_Conc.SumArray(B_Conc);
+        ATrace = {x: time, y: A_Conc, mode: 'lines', name: '[A]', type: 'scatter'};
+        BTrace = {x: time, y: B_Conc, mode: 'lines', name: '[B]', type: 'scatter'};
+        SumTrace = {x: time, y: ABsum, mode: 'lines', name: 'Sum', type: 'scatter'};
+        data = [ATrace,BTrace,SumTrace];
+    }
+    // Plot
+    function Plot(){
+        LoadCalcSet();
+        var layout = {
+            xaxis: {type: 'linear', title: 'time (seconds)', autorange: true},
+            yaxis: {type: 'linear', title: 'Species Concentration (&mu;M)', autorange: true}};
+        Plotly.plot('PlotDiv',data,layout,{displayModeBar: false});}
+    // Replot
+    function RePlot(){
+        Plotly.deleteTraces("PlotDiv", [0, 1, 2]);
+        LoadCalcSet();
+        Plotly.addTraces('PlotDiv',[ATrace,BTrace,SumTrace]);
+        Plotly.redraw('PlotDiv');}
+    // Plot upon page loading
+    function start(){Plot();}
+    window.onload = start;
+</script>
+<div>
+    <!-- Items within this DIV display and attribute authorship of this file -->
+    <!-- Please do not remove! -->
+    <a href="http://creativecommons.org/licenses/by-sa/4.0/" rel="nofollow"><img alt="Creative Commons License" src="http://i.creativecommons.org/l/by-sa/4.0/88x31.png" style="border-width:0"></a>
+    <f1>Plot scripts produced by <a href="http://chemistry.miamioh.edu/pagelab">Rick Page</a> at  <a href="http://chemistry.miamioh.edu">Miami University</a><br>
+        Works within this site are licensed under a <a href="http://creativecommons.org/licenses/by-sa/4.0/" rel="nofollow">Creative Commons Attribution-ShareAlike 4.0 International License</a></f1>.
+</div>
+</body>
